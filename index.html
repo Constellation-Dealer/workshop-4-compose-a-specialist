@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Specialist — Compose It From Four Servers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;600&display=swap">
+  <script>
+    (async function loadVersionedAssets() {
+      let version = 'dev';
+
+      try {
+        const res = await fetch('app-version.json', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.version) version = data.version;
+        }
+      } catch {
+        // Fall back to unversioned local development behavior.
+      }
+
+      window.__APP_VERSION__ = version;
+
+      const css = document.createElement('link');
+      css.rel = 'stylesheet';
+      css.href = `styles.css?v=${version}`;
+      document.head.appendChild(css);
+
+      function appendScript(src, alwaysFresh) {
+        return new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = alwaysFresh
+            ? `${src}?v=${version}&t=${Date.now()}`
+            : `${src}?v=${version}`;
+          script.async = false;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      async function loadScripts() {
+        try {
+          await appendScript('helpers.js');
+          await appendScript('solution.js', true);
+          if (window.__initSolutionApp) window.__initSolutionApp();
+        } catch {
+          // The page will surface script errors in the browser console.
+        }
+      }
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', async function onReady() {
+          window.removeEventListener('DOMContentLoaded', onReady);
+          await loadScripts();
+        });
+      } else {
+        await loadScripts();
+      }
+    })();
+  </script>
+</head>
+<body>
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header class="masthead">
+    <div class="masthead-text">
+      <p class="eyebrow">Workshop 04 · Compose a specialist</p>
+      <h1>Your specialist</h1>
+      <p class="subhead">An assistant that answers by reaching into four servers nobody in this room owns. Ask the four acts in order and watch the <em>tools used</em> line under each answer — that line is the lesson.</p>
+    </div>
+    <div class="masthead-meta">
+      <span class="env-chip" id="envChip">DEV</span>
+      <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch colour scheme">&#9686;</button>
+    </div>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <main class="shell">
+
+    <!-- ── Side column ──────────────────────────────────────── -->
+    <section class="panel-col" aria-label="About this solution">
+      <div class="panel sticky-panel">
+
+        <p class="eyebrow">The four servers</p>
+        <dl class="server-list">
+          <dt>deepwiki</dt><dd>reads any public GitHub repository</dd>
+          <dt>context7</dt><dd>library documentation — two tools that must be chained</dd>
+          <dt>mslearn</dt><dd>Microsoft Learn</dd>
+          <dt>awsknowledge</dt><dd>AWS documentation, some of it as structured data</dd>
+        </dl>
+        <p class="field-note">
+          None of them is ours. The assistant picks among them from their tool
+          descriptions alone — and from one short markdown file you can edit.
+        </p>
+
+        <div class="divider"></div>
+
+        <p class="eyebrow">The one lever you hold</p>
+        <div class="skill-card">
+          <code class="skill-name">workshop-4-answer-style</code>
+          <a class="fb-link" id="skillLink" href="https://dev-dealeriq.csidealer.com/skills" target="_blank" rel="noopener">Open it in the DealerIQ console &#8599;</a>
+        </div>
+        <p class="field-note">
+          A <strong>skill</strong>: a few lines prepended to the model's
+          instructions. Edit it, publish, ask again — which tool the assistant
+          reaches for, and what it says about its source, changes. No deploy,
+          no code.
+        </p>
+
+        <p class="field-note warn">
+          One copy, shared by everyone in this workshop. Your edit changes the
+          answers everybody else gets, and theirs changes yours — whoever
+          published last wins.
+        </p>
+
+        <div class="divider"></div>
+
+        <details class="conn-block">
+          <summary><span class="eyebrow">Connection</span> <span class="conn-state" id="connState">not loaded</span></summary>
+          <div id="connList"></div>
+        </details>
+
+      </div>
+    </section>
+
+    <!-- ── Conversation column ──────────────────────────────── -->
+    <section class="results-col" aria-label="Ask the solution">
+
+      <div class="results-head">
+        <p class="eyebrow">Ask it</p>
+        <p class="head-note" id="headNote">Four acts. Ask them in order — each one makes one thing visible.</p>
+      </div>
+
+      <form id="askForm" class="ask-form">
+        <label class="sr-only" for="askInput">Your question</label>
+        <textarea id="askInput" class="field-input" rows="2" placeholder="Ask the assistant something…"></textarea>
+        <button type="submit" class="run-btn" id="askBtn">Ask</button>
+      </form>
+
+      <div class="chip-row" id="questionChips"></div>
+
+      <div class="error-banner" id="errorBanner" role="alert"></div>
+
+      <div class="answer-list" id="answerList">
+        <p class="empty-note">
+          Start with Act 1. Under every answer you will see which servers and
+          tools the assistant reached for, in order, and how long each took.
+          Read the answer, then read that line — the README says what each
+          act is there to show.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+</body>
+</html>

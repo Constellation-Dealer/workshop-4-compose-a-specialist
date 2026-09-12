@@ -1,0 +1,660 @@
+/* ═══════════════════════════════════════════════════════════════
+   Evals — Prove It Actually Works
+   DO NOT MODIFY — focus on evals.js instead
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --paper:  #EDF1F4;
+  --card:   #FFFFFF;
+  --ink:    #12202B;
+  --muted:  #516777;
+  --rail:   #9FB3C0;
+  --trace:  #0B6E5F;
+  --amber:  #C8862A;
+  /* --amber is the MARKER colour and stays decorative. Amber TEXT is 11-12px, which
+     needs 4.5:1, and #C8862A is 2.68:1 on paper and 2.42:1 on --amber-wash -- so text
+     gets its own darker token. --oxide is text on --oxide-wash, which composites
+     darker than plain paper, so it is darkened just enough to clear 4.5:1 there. */
+  --amber-text: #8A5A12;
+  --oxide:  #AE3E2A;
+  /* The accent is a BACKGROUND as well as a text colour, and the two pull in opposite
+     directions: as text on a dark surface --trace has to be light, while white sitting
+     ON it has to be dark. No value satisfies both -- measured, not guessed -- so the
+     button carries its own foreground. In dark mode that is dark text on the bright
+     accent (6.14:1), the ordinary way round for an accent button on a dark ground. */
+  --on-accent: #FFFFFF;
+
+  --trace-wash: rgba(11, 110, 95, 0.09);
+  --amber-wash: rgba(200, 134, 42, 0.11);
+  --oxide-wash: rgba(179, 64, 43, 0.09);
+  --hair: rgba(159, 179, 192, 0.55);
+
+  --sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1A22;
+    --card:  #152530;
+    --ink:   #DCE7EE;
+    --muted: #8AA3B4;
+    --rail:  #33505F;
+    --trace: #32AA93;
+    --amber: #E0A248;
+    --amber-text: #E0A248;
+    --oxide: #E07A66;
+    --on-accent: #0E1A22;
+
+    --trace-wash: rgba(42, 154, 135, 0.14);
+    --amber-wash: rgba(224, 162, 72, 0.14);
+    --oxide-wash: rgba(210, 96, 74, 0.14);
+    --hair: rgba(51, 80, 95, 0.85);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --paper: #0E1A22;
+  --card:  #152530;
+  --ink:   #DCE7EE;
+  --muted: #8AA3B4;
+  --rail:  #33505F;
+  --trace: #32AA93;
+  --amber: #E0A248;
+  --amber-text: #E0A248;
+  --oxide: #E07A66;
+  --on-accent: #0E1A22;
+
+  --trace-wash: rgba(42, 154, 135, 0.14);
+  --amber-wash: rgba(224, 162, 72, 0.14);
+  --oxide-wash: rgba(210, 96, 74, 0.14);
+  --hair: rgba(51, 80, 95, 0.85);
+
+  color-scheme: dark;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.55;
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2px solid var(--trace);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+
+.mono { font-family: var(--mono); }
+
+/* ── Masthead ──────────────────────────────────────────────── */
+
+.masthead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 28px 32px 24px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--card);
+}
+
+.masthead h1 {
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 6px 0 6px;
+}
+
+.subhead {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.masthead-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.env-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--trace);
+  background: var(--trace-wash);
+  border: 1px solid var(--trace);
+  border-radius: 3px;
+  padding: 3px 9px;
+}
+
+.theme-btn {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  padding: 5px 9px;
+  cursor: pointer;
+}
+.theme-btn:hover { color: var(--ink); border-color: var(--rail); }
+
+/* ── Shell ─────────────────────────────────────────────────── */
+
+.shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  padding: 24px 32px 64px;
+  max-width: 1320px;
+}
+
+@media (min-width: 900px) {
+  .shell { grid-template-columns: 360px minmax(0, 1fr); gap: 32px; }
+}
+
+@media (max-width: 560px) {
+  .masthead { padding: 20px 18px 18px; flex-wrap: wrap; }
+  .masthead h1 { font-size: 26px; }
+  .shell { padding: 18px 18px 48px; }
+}
+
+/* ── Input panel ───────────────────────────────────────────── */
+
+.panel {
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 20px;
+}
+
+@media (min-width: 900px) {
+  .sticky-panel { position: sticky; top: 24px; }
+}
+
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin: 14px 0 3px;
+}
+
+.field-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.field-input {
+  width: 100%;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  padding: 9px 10px;
+  resize: vertical;
+}
+
+.preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 16px; }
+
+.preset-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  padding: 4px 8px;
+  cursor: pointer;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.preset-btn:hover { color: var(--trace); border-color: var(--trace); }
+
+.run-btn {
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--on-accent);
+  background: var(--trace);
+  border: 1px solid var(--trace);
+  border-radius: 3px;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+.run-btn:hover:not(:disabled) { filter: brightness(1.08); }
+.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.run-note {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-top: 7px;
+  text-align: center;
+}
+
+.divider { height: 1px; background: var(--hair); margin: 18px 0 14px; }
+
+/* ── Run history ───────────────────────────────────────────── */
+
+.run-history { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+
+.run-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 5px 7px;
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  background: var(--paper);
+}
+.run-row.current { border-color: var(--trace); }
+.run-row .run-idx { color: var(--muted); }
+.run-row .run-prefix {
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.run-row .run-score { color: var(--trace); font-weight: 500; }
+
+.empty-note { font-size: 13px; color: var(--muted); }
+
+/* ── Connection panel ──────────────────────────────────────── */
+
+.conn summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+}
+.conn summary::-webkit-details-marker { display: none; }
+.conn summary::after {
+  content: '+';
+  font-family: var(--mono);
+  color: var(--muted);
+  margin-left: auto;
+}
+.conn[open] summary::after { content: '\2212'; }
+
+.conn-state {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.conn-state.ok { color: var(--trace); }
+.conn-state.missing { color: var(--oxide); }
+
+.conn-list {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 4px 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.conn-list dt { color: var(--muted); }
+.conn-list dd { color: var(--ink); overflow-wrap: anywhere; }
+
+/* ── Results head ──────────────────────────────────────────── */
+
+.results-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.tallies { display: flex; gap: 14px; font-family: var(--mono); font-size: 12px; }
+.tally { color: var(--muted); }
+.tally b { font-weight: 500; }
+.tally.pass b { color: var(--trace); }
+.tally.fail b { color: var(--oxide); }
+.tally.unparsed b { color: var(--amber-text); }
+
+.error-banner {
+  display: none;
+  font-size: 13px;
+  color: var(--oxide);
+  background: var(--oxide-wash);
+  border: 1px solid var(--oxide);
+  border-radius: 3px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.error-banner.visible { display: block; }
+
+/* ── The rail ──────────────────────────────────────────────── */
+
+.rail-wrap { position: relative; padding-left: 22px; }
+
+.rail {
+  position: absolute;
+  left: 6px;
+  top: 22px;
+  width: 1px;
+  height: 0;
+  background: var(--rail);
+  transition: height 320ms ease;
+}
+
+.case-list { display: flex; flex-direction: column; gap: 10px; }
+
+.empty-trace { padding: 8px 0; }
+
+/* ── Case card ─────────────────────────────────────────────── */
+
+.case {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-left: 2px solid var(--rail);
+  border-radius: 3px;
+  padding: 12px 14px;
+  animation: rise 120ms ease-out both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.case::before {
+  content: '';
+  position: absolute;
+  left: -22px;
+  top: 17px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--paper);
+  border: 1.5px solid var(--rail);
+}
+.case::after {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 21px;
+  width: 10px;
+  height: 1px;
+  background: var(--rail);
+}
+
+.case.running { border-left-color: var(--amber); }
+.case.running::before { border-color: var(--amber); animation: pulse 1.1s ease-in-out infinite; }
+.case.done    { border-left-color: var(--trace); }
+.case.done::before { border-color: var(--trace); background: var(--trace); }
+.case.failed  { border-left-color: var(--oxide); }
+.case.failed::before { border-color: var(--oxide); background: var(--oxide); }
+.case.flagged { border-left-color: var(--amber); }
+.case.flagged::before { border-color: var(--amber); background: var(--amber); }
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--amber-wash); }
+  50%      { box-shadow: 0 0 0 5px var(--amber-wash); }
+}
+
+.case-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.case-id {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.case-title { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+
+.case-elapsed {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.case-delta {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 2px;
+  border: 1px solid var(--hair);
+  color: var(--muted);
+}
+.case-delta.better { color: var(--trace); border-color: var(--trace); background: var(--trace-wash); }
+.case-delta.worse  { color: var(--oxide); border-color: var(--oxide); background: var(--oxide-wash); }
+
+.case-question {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
+}
+.case-question b { color: var(--ink); font-weight: 400; }
+
+.case-rule {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 5px;
+  padding-left: 9px;
+  border-left: 1px solid var(--hair);
+}
+
+/* verdict lines — indented children of the case, same treatment
+   the trace gives a tool call nested inside its step */
+.verdicts { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+
+.verdict {
+  display: grid;
+  grid-template-columns: 52px 62px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  padding-left: 14px;
+  border-left: 1px solid var(--hair);
+}
+
+.verdict .v-kind { color: var(--muted); letter-spacing: 0.06em; }
+.verdict .v-mark { font-weight: 500; letter-spacing: 0.06em; }
+.verdict .v-note { color: var(--muted); overflow-wrap: anywhere; }
+
+.v-mark.pass     { color: var(--trace); }
+.v-mark.fail     { color: var(--oxide); }
+.v-mark.unparsed { color: var(--amber-text); }
+.v-mark.skip     { color: var(--muted); }
+
+.disagree {
+  margin-top: 9px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--amber-text);
+  background: var(--amber-wash);
+  border: 1px solid var(--amber);
+  border-radius: 2px;
+  padding: 5px 8px;
+}
+
+.case-answer { margin-top: 10px; }
+.case-answer summary {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+}
+.case-answer pre {
+  margin-top: 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-radius: 3px;
+  padding: 9px 10px;
+  max-height: 240px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.fixture-tag {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--amber-text);
+  border: 1px solid var(--amber);
+  border-radius: 2px;
+  padding: 0 5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Feedback under a case — the thumb that reaches DAC's review queue.
+   Existing tokens only: --muted on --card is already proven by the contrast
+   check, so this adds no new pair to resolve. */
+.case-feedback { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.case-feedback .fb-label { font-size: 0.78rem; color: var(--muted); }
+.case-feedback .fb-btn {
+  font: inherit; font-size: 0.78rem; padding: 2px 10px;
+  border: 1px solid var(--hair); border-radius: 5px;
+  background: transparent; color: var(--ink); cursor: pointer;
+}
+.case-feedback .fb-btn:hover:not(:disabled) { border-color: var(--rail); }
+.case-feedback .fb-btn:disabled { opacity: 0.5; cursor: default; }
+.case-feedback .fb-status { font-size: 0.78rem; color: var(--muted); }
+
+/* ── The solution page ────────────────────────────────────────────────────
+   Added when workshop 3 stopped being a hand-built eval harness. The eval
+   lives on the platform now; this page is the thing being evaluated. */
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.skill-card {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 12px; margin: 10px 0;
+  border: 1px solid var(--hair); border-radius: 6px; background: var(--trace-wash);
+}
+.skill-name { font-family: var(--mono); font-size: 0.82rem; color: var(--ink); }
+
+/* The shared-skill warning. Amber wash with its own darker text token —
+   --amber is a MARKER colour and does not clear 4.5:1 as text. */
+.field-note.warn {
+  padding: 8px 10px; border-radius: 6px;
+  background: var(--amber-wash); color: var(--amber-text);
+}
+
+.ask-form { display: flex; gap: 8px; align-items: flex-start; margin-bottom: 10px; }
+.ask-form .field-input { flex: 1 1 auto; }
+.ask-form .run-btn { flex: 0 0 auto; width: auto; padding: 8px 18px; }
+
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+
+.head-note { font-size: 0.78rem; color: var(--muted); margin: 0; }
+.empty-note { font-size: 0.82rem; color: var(--muted); line-height: 1.6; max-width: 56ch; }
+
+.answer-list { display: flex; flex-direction: column; gap: 12px; }
+
+.answer-card {
+  border: 1px solid var(--hair); border-radius: 7px;
+  background: var(--card); padding: 12px 14px;
+}
+/* NOT `opacity` — that fades the text inside and cannot be checked without a
+   DOM, which the contrast guard rightly refuses to guess at. The pending state
+   says so with a colour that is itself checked. */
+.answer-card.is-pending .answer-body { color: var(--muted); }
+.answer-card.is-error { border-color: var(--oxide); }
+
+.answer-q {
+  font-size: 0.78rem; color: var(--muted); margin: 0 0 8px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--hair);
+}
+.answer-body { font-size: 0.88rem; line-height: 1.6; color: var(--ink); }
+.answer-text { margin: 0; white-space: pre-wrap; }
+
+/* The Confidence line the skill asks for, set apart so it is visibly the
+   skill's doing rather than the model's prose. */
+.answer-conf {
+  margin: 10px 0 0; padding-top: 8px; border-top: 1px solid var(--hair);
+  font-size: 0.78rem; color: var(--muted);
+}
+
+/* A chip that IS one of the eval's scenarios. The distinction is on the chip
+   rather than in the ordering, because the suite changes and the page's claim
+   about it must not quietly widen when it does. */
+.preset-btn.is-scenario { border-color: var(--trace); color: var(--ink); }
+
+/* ── Workshop 4: the four servers, and the tools line under an answer ─────── */
+.server-list { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 6px 0 10px; font-size: 0.82rem; }
+.server-list dt { font-family: var(--mono); color: var(--trace); }
+.server-list dd { margin: 0; color: var(--muted); }
+.tool-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.tool-strip .tool-label { font-size: 0.78rem; color: var(--muted); }
+.tool-chip {
+  font-family: var(--mono); font-size: 0.74rem; color: var(--ink);
+  background: var(--trace-wash); border: 1px solid var(--hair); border-radius: 4px; padding: 2px 7px;
+}
+.tool-chip.is-fail { background: var(--oxide-wash); color: var(--oxide); }
+.preset-btn.is-act { font-weight: 600; }
+.tool-chip.is-builtin { background: transparent; color: var(--muted); }
