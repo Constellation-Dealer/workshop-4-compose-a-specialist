@@ -66,11 +66,18 @@ slogan: the model decided it needed two steps and did them in order.
 
 > *What is the recommended way to retry failed HTTP requests in .NET?*
 
-Three of the four servers could answer this. **Watch for:** which one did.
-Then open the skill (below), add one line — for example
-*"For library questions, prefer the library's own documentation over vendor
-guidance."* — publish, ask again, and watch the tools line move to a different
-server. You changed which expert the assistant consults with a sentence.
+Three of the four servers could answer this. **Watch for:** which one did —
+on the day this was written, Microsoft Learn. Then open the skill (below) and
+add this line to the instructions, publish, and ask again:
+
+> *For any question about a software library or framework, look it up in
+> Context7 first: call resolve-library-id, then query-docs, and answer from
+> what comes back rather than from vendor guidance.*
+
+The tools line moves to `context7`. You changed which expert the assistant
+consults with one sentence — and notice that a vaguer sentence ("prefer the
+library's own documentation") was tried first and did **not** move it. Being
+specific about *which tool, in which order* is what a skill is for.
 
 ### Act 4 — Data, not prose
 
